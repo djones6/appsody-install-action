@@ -1,0 +1,24 @@
+name: 'Configure git cli credentials'
+description: 'Configure the git global config with credentials for github.com'
+inputs:
+  appsody-release:
+    description: 'Release of Appsody CLI to install (or latest if not specified)'
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        if [ -z "${{ inputs.appsody-release }}" ]; then
+          export RELEASE="latest"
+        else
+          export RELEASE="tags/${{ inputs.appsody-release }}"
+        fi
+        echo "Installing Appsody..."
+        APPSODY_RELEASE=$(curl -s https://api.github.com/repos/appsody/appsody/releases/${RELEASE} \
+        | grep "browser_download_url.*deb" \
+        | cut -d : -f 2,3 \
+        | tr -d \")
+        echo "Latest Appsody Release found: ${APPSODY_RELEASE}"
+        wget ${APPSODY_RELEASE}
+        sudo apt install -f ./appsody_*_amd64.deb
+      shell: bash
